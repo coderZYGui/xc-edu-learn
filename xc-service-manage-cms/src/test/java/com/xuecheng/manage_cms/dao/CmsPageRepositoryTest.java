@@ -5,8 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
@@ -47,7 +46,53 @@ public class CmsPageRepositoryTest {
         }
     }
 
+    /**
+     * 根据条件查询
+     */
+    @Test
+    public void testFindAllByCondition() {
+        // 分页参数
+        int page = 0; // 从0页开始
+        int size = 20; // 每页显示10条数据
+        Pageable pageable = PageRequest.of(page, size);
 
+        // 条件值对象(将条件封装到CmsPage对象中)
+        CmsPage cmsPage = new CmsPage();
+        // 根据站点id、模板id来查询页面
+        cmsPage.setSiteId("5a751fab6abb5044e0d19ea1");
+        cmsPage.setTemplateId("5a925be7b00ffc4b3c1578b5");
+        // 条件匹配器
+        ExampleMatcher exampleMatcher = ExampleMatcher.matching();
+        // 定义Example
+        Example<CmsPage> example = Example.of(cmsPage, exampleMatcher);
+        Page<CmsPage> all = cmsPageRepository.findAll(example, pageable);
+        List<CmsPage> content = all.getContent();
+        System.out.println("content = " + content);
+    }
+
+    /**
+     * 根据条件查询(模糊查询)
+     */
+    @Test
+    public void testFindAllByCondition2() {
+        // 分页参数
+        int page = 0; // 从0页开始
+        int size = 20; // 每页显示10条数据
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 条件值对象(将条件封装到CmsPage对象中)
+        CmsPage cmsPage = new CmsPage();
+        // 根据站点id、模板id来查询页面
+        cmsPage.setPageAliase("轮播");
+        // 条件匹配器
+        ExampleMatcher exampleMatcher = ExampleMatcher.matching();
+        exampleMatcher = exampleMatcher.withMatcher("pageAliase", ExampleMatcher.GenericPropertyMatchers.contains());
+        // 定义Example
+        Example<CmsPage> example = Example.of(cmsPage, exampleMatcher);
+        Page<CmsPage> all = cmsPageRepository.findAll(example, pageable);
+        List<CmsPage> content = all.getContent();
+        System.out.println("content = " + content);
+    }
 
     // 添加 cmsPageRepository.save(), 删除: deleteById(主键)
 

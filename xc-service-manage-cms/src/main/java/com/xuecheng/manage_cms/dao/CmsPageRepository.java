@@ -14,4 +14,6 @@ public interface CmsPageRepository extends MongoRepository<CmsPage, String> {
     // 根据方法命名规则来查询(和Spring data JPA一样)
     CmsPage findByPageName(String pageName);
 
+    CmsPage findByPageNameAndSiteIdAndPageWebPath(String pageName,String siteId,String pageWebPath);
+
 }
