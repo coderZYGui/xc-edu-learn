@@ -5,4 +5,23 @@
             resultType="com.xuecheng.framework.domain.course.CourseBase">
         select * from course_base where id = #{id}
     </select>
+
+    <select id="findCourseListTest" resultType="com.xuecheng.framework.domain.course.CourseBase">
+        select * from course_base
+    </select>
+
+    <!-- 查询我的课程列表 -->
+    <select id="findCourseList" resultType="com.xuecheng.framework.domain.course.ext.CourseInfo">
+            <!--
+            SELECT
+              cb.id,
+              cb.name,
+              cp.pic
+            FROM
+              course_base cb
+              JOIN course_pic cp
+                ON cb.id = cp.courseid
+            -->
+        SELECT course_base.*, (SELECT pic FROM course_pic WHERE courseid = course_base.id) pic FROM course_base
+    </select>
 </mapper>
