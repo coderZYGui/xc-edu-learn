@@ -1,6 +1,5 @@
 package com.xuecheng.test.fastdfs;
 
-import org.csource.common.MyException;
 import org.csource.fastdfs.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,7 +8,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
+
 
 /**
  * Description: 测试FastDFS

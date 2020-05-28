@@ -12,5 +12,5 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface CategoryMapper {
     //查询分类
-    public CategoryNode selectList();
+    CategoryNode selectList();
 }
