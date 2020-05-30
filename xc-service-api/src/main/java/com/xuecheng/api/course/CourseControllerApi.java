@@ -61,4 +61,7 @@ public interface CourseControllerApi {
 
     @ApiOperation("预览课程")
     CoursePublishResult preview(String id);
+
+    @ApiOperation("预览发布")
+    CoursePublishResult publish(String id);
 }
