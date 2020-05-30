@@ -2,20 +2,27 @@ package com.xuecheng.manage_course.service;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.xuecheng.framework.domain.cms.CmsPage;
+import com.xuecheng.framework.domain.cms.response.CmsPageResult;
 import com.xuecheng.framework.domain.course.CourseBase;
 import com.xuecheng.framework.domain.course.CourseMarket;
 import com.xuecheng.framework.domain.course.CoursePic;
 import com.xuecheng.framework.domain.course.Teachplan;
 import com.xuecheng.framework.domain.course.ext.CourseInfo;
+import com.xuecheng.framework.domain.course.ext.CourseView;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
 import com.xuecheng.framework.domain.course.request.CourseListRequest;
 import com.xuecheng.framework.domain.course.response.AddCourseResult;
+import com.xuecheng.framework.domain.course.response.CourseCode;
+import com.xuecheng.framework.domain.course.response.CoursePublishResult;
 import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.*;
+import com.xuecheng.manage_course.client.CmsPageClient;
 import com.xuecheng.manage_course.dao.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +56,9 @@ public class CourseService {
 
     @Resource
     private CourseMapper courseMapper;
+
+    @Resource
+    private CmsPageClient cmsPageClient;
 
     // 课程计划查询
     public TeachplanNode findTeachplanList(String courseId) {
@@ -245,5 +255,82 @@ public class CourseService {
             return new ResponseResult(CommonCode.SUCCESS);
         }
         return new ResponseResult(CommonCode.FAIL);
+    }
+
+    // 查询课程详情(视图), 包括基本信息、图片、营销信息、课程计划
+    public CourseView getCourseView(String id) {
+        CourseView courseView = new CourseView();
+        // 查询课程基本信息
+        CourseBase courseBase = this.getCourseById(id);
+        courseView.setCourseBase(courseBase);
+
+        // 查询课程图片
+        CoursePic coursePic = this.findCoursePic(id);
+        courseView.setCoursePic(coursePic);
+
+        // 查询营销信息
+        CourseMarket courseMarket = this.getCourseMarketById(id);
+        courseView.setCourseMarket(courseMarket);
+
+        // 查询课程计划信息
+        TeachplanNode teachplanNode = this.findTeachplanList(id);
+        courseView.setTeachplanNode(teachplanNode);
+
+        return courseView;
+    }
+
+
+/*    @Value("${course‐publish.pagePhysicalPath}")
+    private String pagePhysicalPath;
+
+    @Value("${course‐publish.pageWebPath}")
+    private String pageWebPath;
+
+    @Value("${course‐publish.siteId}")
+    private String siteId;
+
+    @Value("${course‐publish.templateId}")
+    private String templateId;
+
+    @Value("${course‐publish.previewUrl}")
+    private String previewUrl;*/
+
+    //根据id查询课程基本信息
+    public CourseBase findCourseBaseById(String courseId){
+        Optional<CourseBase> baseOptional = courseBaseRepository.findById(courseId);
+        if(baseOptional.isPresent()){
+            CourseBase courseBase = baseOptional.get();
+            return courseBase;
+        }
+        ExceptionCast.cast(CourseCode.COURSE_DENIED_DELETE);
+        return null;
+    }
+    // 课程预览
+    public CoursePublishResult preview(String id) {
+        //查询课程
+        CourseBase courseBaseById = this.findCourseBaseById(id);
+        //请求cms添加页面
+        //准备cmsPage信息
+        CmsPage cmsPage = new CmsPage();
+        cmsPage.setSiteId("5b30cba5f58b4411fc6cb1e5");//站点id
+        cmsPage.setDataUrl("http://localhost:31200/course/courseview/" + id);//数据模型url
+        cmsPage.setPageName(id + ".html");//页面名称
+        cmsPage.setPageAliase(courseBaseById.getName());//页面别名，就是课程名称
+        cmsPage.setPagePhysicalPath("/course/detail/");//页面物理路径
+        cmsPage.setPageWebPath("/course/detail/");//页面webpath
+        cmsPage.setTemplateId("5b345a6b94db44269cb2bfec");//页面模板id
+
+        //远程调用cms
+        CmsPageResult cmsPageResult = cmsPageClient.saveCmsPage(cmsPage);
+        if (!cmsPageResult.isSuccess()) {
+            return new CoursePublishResult(CommonCode.FAIL, null);
+        }
+
+        CmsPage cmsPage1 = cmsPageResult.getCmsPage();
+        String pageId = cmsPage1.getPageId();
+        //拼装页面预览的url
+        String url = "http://www.xuecheng.com/cms/preview/" + pageId;
+        //返回CoursePublishResult对象（当中包含了页面预览的url）
+        return new CoursePublishResult(CommonCode.SUCCESS, url);
     }
 }
