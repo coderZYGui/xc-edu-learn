@@ -3,7 +3,6 @@ package com.xuecheng.manage_course.service;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.sun.corba.se.impl.naming.cosnaming.NamingUtils;
 import com.xuecheng.framework.domain.cms.CmsPage;
 import com.xuecheng.framework.domain.cms.response.CmsPageResult;
 import com.xuecheng.framework.domain.cms.response.CmsPostPageResult;
@@ -22,7 +21,6 @@ import com.xuecheng.manage_course.dao.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +62,9 @@ public class CourseService {
 
     @Resource
     private CoursePubRepository coursePubRepository;
+
+    @Resource
+    private TeachplanMediaRepository teachplanMediaRepository;
 
     // 课程计划查询
     public TeachplanNode findTeachplanList(String courseId) {
@@ -444,5 +445,49 @@ public class CourseService {
         courseBaseById.setStatus("202002");
         courseBaseRepository.save(courseBaseById);
         return courseBaseById;
+    }
+
+    //保存课程计划与媒资文件的关联信息
+    public ResponseResult savemedia(TeachplanMedia teachplanMedia) {
+        if(teachplanMedia == null || StringUtils.isEmpty(teachplanMedia.getTeachplanId())){
+            ExceptionCast.cast(CommonCode.INVALID_PARAM);
+        }
+        //校验课程计划是否是3级
+        //课程计划
+        String teachplanId = teachplanMedia.getTeachplanId();
+        //查询到课程计划
+        Optional<Teachplan> optional = teachplanRepository.findById(teachplanId);
+        if(!optional.isPresent()){
+            ExceptionCast.cast(CommonCode.INVALID_PARAM);
+        }
+        //查询到教学计划
+        Teachplan teachplan = optional.get();
+        //取出等级
+        String grade = teachplan.getGrade();
+        // 如果级别为空或者级别不为3
+        if(StringUtils.isEmpty(grade) || !grade.equals("3")){
+            //只允许选择第三级的课程计划关联视频
+            ExceptionCast.cast(CourseCode.COURSE_MEDIA_TEACHPLAN_GRADEERROR);
+        }
+        //根据teachplanId去teachplan_media表中查询teachplanMedia, 看是否已经存在
+        Optional<TeachplanMedia> mediaOptional = teachplanMediaRepository.findById(teachplanId);
+        TeachplanMedia one = null;
+        if(mediaOptional.isPresent()){
+            // 已经存在就获取该 teachplanMedia,然后更新
+            one = mediaOptional.get();
+        }else{
+            // 不存在则创建
+            one = new TeachplanMedia();
+        }
+
+        //将one保存到数据库
+        one.setCourseId(teachplan.getCourseid());//课程id
+        one.setMediaId(teachplanMedia.getMediaId());//媒资文件的id
+        one.setMediaFileOriginalName(teachplanMedia.getMediaFileOriginalName());//媒资文件的原始名称
+        one.setMediaUrl(teachplanMedia.getMediaUrl());//媒资文件的url
+        one.setTeachplanId(teachplanId);
+        teachplanMediaRepository.save(one);
+
+        return new ResponseResult(CommonCode.SUCCESS);
     }
 }

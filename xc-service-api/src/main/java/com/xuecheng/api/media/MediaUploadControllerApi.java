@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Description:
+ * Description: 媒资文件上传接口
  *
  * @author zygui
  * @date Created on 2020/6/5 11:38

@@ -6,7 +6,10 @@ import lombok.Data;
 @Data
 public class QueryMediaFileRequest extends RequestData {
 
+    // 文件原始名称
     private String fileOriginalName;
+    // 文件处理状态
     private String processStatus;
+    // 对文件管理的标签
     private String tag;
 }
