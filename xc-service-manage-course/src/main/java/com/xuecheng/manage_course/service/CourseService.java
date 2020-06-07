@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -43,10 +44,10 @@ public class CourseService {
     private TeachplanMapper teachplanMapper;
 
     @Autowired
-    TeachplanRepository teachplanRepository;
+    private TeachplanRepository teachplanRepository;
 
     @Autowired
-    CourseBaseRepository courseBaseRepository;
+    private CourseBaseRepository courseBaseRepository;
 
     @Resource
     private CourseMarketRepository courseMarketRepository;
@@ -65,6 +66,9 @@ public class CourseService {
 
     @Resource
     private TeachplanMediaRepository teachplanMediaRepository;
+
+    @Resource
+    private TeachplanMediaPubRepository teachplanMediaPubRepository;
 
     // 课程计划查询
     public TeachplanNode findTeachplanList(String courseId) {
@@ -378,7 +382,31 @@ public class CourseService {
         //...
         //得到页面的url
         String pageUrl = cmsPostPageResult.getPageUrl();
+
+        // 向teachplanMediaPub中保存课程媒资信息
+        saveTeachplanMediaPub(id);
+
         return new CoursePublishResult(CommonCode.SUCCESS,pageUrl);
+    }
+
+    //向teachplanMediaPub中保存课程媒资信息
+    private void saveTeachplanMediaPub(String courseId){
+        //先删除teachplanMediaPub中的数据
+        teachplanMediaPubRepository.deleteByCourseId(courseId);
+        //从teachplanMedia中查询
+        List<TeachplanMedia> teachplanMediaList = teachplanMediaRepository.findByCourseId(courseId);
+        List<TeachplanMediaPub> teachplanMediaPubs = new ArrayList<>();
+        //将teachplanMediaList数据放到teachplanMediaPubs中
+        for(TeachplanMedia teachplanMedia:teachplanMediaList){
+            TeachplanMediaPub teachplanMediaPub = new TeachplanMediaPub();
+            BeanUtils.copyProperties(teachplanMedia,teachplanMediaPub);
+            //添加时间戳
+            teachplanMediaPub.setTimestamp(new Date());
+            teachplanMediaPubs.add(teachplanMediaPub);
+        }
+
+        //将teachplanMediaList插入到teachplanMediaPub
+        teachplanMediaPubRepository.saveAll(teachplanMediaPubs);
     }
 
     //将coursePub对象保存到数据库
