@@ -1,4 +1,4 @@
-package com.xuecheng.govern.center;
+package com.xuecheng.govern.gateway.center;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

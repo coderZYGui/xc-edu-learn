@@ -13,5 +13,5 @@ import java.util.List;
  */
 public interface TeachplanRepository extends JpaRepository<Teachplan, String> {
     // 查询根据课程id和parentid查询teachplan
-    public List<Teachplan> findByCourseidAndParentid(String courseId, String parentId);
+    List<Teachplan> findByCourseidAndParentid(String courseId, String parentId);
 }
