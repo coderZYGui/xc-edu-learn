@@ -22,6 +22,9 @@
               JOIN course_pic cp
                 ON cb.id = cp.courseid
             -->
-        SELECT course_base.*, (SELECT pic FROM course_pic WHERE courseid = course_base.id) pic FROM course_base
+        SELECT
+            course_base.*, (SELECT pic FROM course_pic WHERE courseid = course_base.id) pic
+        FROM course_base
+        WHERE company_id = #{companyId}
     </select>
 </mapper>

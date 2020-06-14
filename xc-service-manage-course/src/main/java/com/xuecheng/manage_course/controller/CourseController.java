@@ -11,8 +11,11 @@ import com.xuecheng.framework.domain.course.response.CoursePublishResult;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.ResponseResult;
+import com.xuecheng.framework.utils.XcOauth2Util;
+import com.xuecheng.framework.web.BaseController;
 import com.xuecheng.manage_course.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -25,17 +28,20 @@ import javax.annotation.Resource;
  */
 @RestController
 @RequestMapping("/course")
-public class CourseController implements CourseControllerApi {
+public class CourseController extends BaseController implements CourseControllerApi {
 
     @Autowired
     private CourseService courseService;
 
+    // 当前用户拥有course_teachplan_list权限时候可访问该接口
+    @PreAuthorize("hasAuthority('course_teachplan_list')")
     @Override
     @GetMapping("/teachplan/list/{courseId}")
     public TeachplanNode findTeachplanList(@PathVariable("courseId") String courseId) {
         return courseService.findTeachplanList(courseId);
     }
 
+    @PreAuthorize("hasAuthority('course_teachplan_add')")
     @Override
     @PostMapping("/teachplan/add")
     public ResponseResult addTeachplan(@RequestBody Teachplan teachplan) {
@@ -45,7 +51,17 @@ public class CourseController implements CourseControllerApi {
     @Override
     @GetMapping("/coursebase/list/{page}/{size}")
     public QueryResponseResult<CourseInfo> findCourseList(@PathVariable("page") int page, @PathVariable("size") int size, CourseListRequest courseListRequest) {
-        return courseService.findCourseList(page, size, courseListRequest);
+
+        // 当前用户所属单位的id
+        //String company_id = "2";
+
+        // 获取当前用户信息
+        XcOauth2Util xcOauth2Util = new XcOauth2Util();
+        // 从请求头中获取jwt令牌,并解析里面的内容,jwt中已经包含了用户的company_id
+        XcOauth2Util.UserJwt userJwt = xcOauth2Util.getUserJwtFromHeader(request);
+        // 当前用户所属单位id
+        String companyId = userJwt.getCompanyId();
+        return courseService.findCourseList(companyId, page, size, courseListRequest);
     }
 
     @Override
@@ -54,6 +70,7 @@ public class CourseController implements CourseControllerApi {
         return courseService.addCourseBase(courseBase);
     }
 
+    @PreAuthorize("hasAuthority('coursebase_get_courseid')")
     @Override
     @GetMapping("/coursebase/get/{courseId}")
     public CourseBase getCourseById(@PathVariable("courseId") String courseId) {
@@ -62,7 +79,7 @@ public class CourseController implements CourseControllerApi {
 
     @Override
     @PutMapping("/coursebase/update/{id}")
-    public ResponseResult updateCourseBase(@PathVariable("id") String id,@RequestBody CourseBase courseBase) {
+    public ResponseResult updateCourseBase(@PathVariable("id") String id, @RequestBody CourseBase courseBase) {
         return courseService.updateCourseBase(id, courseBase);
     }
 
@@ -89,6 +106,7 @@ public class CourseController implements CourseControllerApi {
         return courseService.addCoursePic(courseId, pic);
     }
 
+    @PreAuthorize("hasAuthority('course_pic_list')")
     @Override
     @GetMapping("/coursepic/list/{courseId}")
     public CoursePic findCoursePic(@PathVariable("courseId") String courseId) {

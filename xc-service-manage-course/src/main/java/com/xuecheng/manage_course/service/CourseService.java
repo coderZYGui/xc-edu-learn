@@ -139,9 +139,13 @@ public class CourseService {
     }
 
     // 获取我的课程; courseListRequest用来后续扩展,对课程排序、等其他操作的时候使用
-    public QueryResponseResult<CourseInfo> findCourseList(int page, int size, CourseListRequest courseListRequest) {
+    public QueryResponseResult<CourseInfo> findCourseList(String company_id, int page, int size, CourseListRequest courseListRequest) {
         if (courseListRequest == null)
             courseListRequest = new CourseListRequest();
+
+        // 企业id
+        courseListRequest.setCompanyId(company_id);
+
         if (page <= 0) page = 0;
         if (size <= 0) size = 20;
 
